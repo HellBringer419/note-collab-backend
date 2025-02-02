@@ -1,0 +1,350 @@
+openapi: 3.0.0
+info:
+  title: Notes Collaboration API
+  description: API for managing notes, users, collaborations, and password reset with OTP verification.
+  version: 1.0.0
+  contact:
+    name: Uday Narayan Mukherjee
+servers:
+  - url: "http://localhost:8080/api"
+    description: Local development server
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+                name:
+                  type: string
+                  example: John Doe
+      responses:
+        "200":
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  email:
+                    type: string
+                    example: user@example.com
+                  name:
+                    type: string
+                    example: John Doe
+        "400":
+          description: Bad Request
+
+  /auth/login:
+    post:
+      summary: Login an existing user
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+      responses:
+        "200":
+          description: User logged in successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  email:
+                    type: string
+                    example: user@example.com
+                  name:
+                    type: string
+                    example: John Doe
+        "404":
+          description: User not found
+
+  /auth/password-reset:
+    post:
+      summary: Request password reset
+      operationId: requestPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+      responses:
+        "200":
+          description: OTP sent to the user's email
+        "404":
+          description: User not found
+
+  /auth/verify-otp:
+    post:
+      summary: Verify OTP for password reset
+      operationId: verifyOtp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+                otp:
+                  type: string
+                  example: "123456"
+      responses:
+        "200":
+          description: OTP verified successfully
+        "400":
+          description: Invalid or expired OTP
+
+  /notes:
+    post:
+      summary: Create a new note
+      operationId: createNote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Meeting Notes"
+                description:
+                  type: string
+                  example: "Notes from today's meeting"
+                createdBy:
+                  type: integer
+                  example: 1
+      responses:
+        "200":
+          description: Note created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  title:
+                    type: string
+                    example: "Meeting Notes"
+                  description:
+                    type: string
+                    example: "Notes from today's meeting"
+        "400":
+          description: Bad Request
+
+    get:
+      summary: Get all notes
+      operationId: getNotes
+      responses:
+        "200":
+          description: List of notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 1
+                    title:
+                      type: string
+                      example: "Meeting Notes"
+                    description:
+                      type: string
+                      example: "Notes from today's meeting"
+                    createdBy:
+                      type: integer
+                      example: 1
+
+  /notes/{id}:
+    put:
+      summary: Update an existing note
+      operationId: updateNote
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Note ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Updated Meeting Notes"
+                description:
+                  type: string
+                  example: "Updated notes from today's meeting"
+                changedBy:
+                  type: integer
+                  example: 1
+      responses:
+        "200":
+          description: Note updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  title:
+                    type: string
+                    example: "Updated Meeting Notes"
+                  description:
+                    type: string
+                    example: "Updated notes from today's meeting"
+        "404":
+          description: Note not found
+
+    delete:
+      summary: Delete a note
+      operationId: deleteNote
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Note ID
+      responses:
+        "200":
+          description: Note deleted successfully
+        "404":
+          description: Note not found
+
+  /notes/{id}/collaborators:
+    get:
+      summary: Get collaborators for a note
+      operationId: getCollaborators
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Note ID
+      responses:
+        "200":
+          description: List of collaborators for the note
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    userId:
+                      type: integer
+                      example: 1
+                    noteId:
+                      type: integer
+                      example: 1
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        email:
+          type: string
+          example: user@example.com
+        name:
+          type: string
+          example: John Doe
+        joinedOn:
+          type: string
+          format: date-time
+          example: "2025-02-02T00:00:00Z"
+
+    Note:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: "Meeting Notes"
+        description:
+          type: string
+          example: "Notes from today's meeting"
+        createdBy:
+          type: integer
+          example: 1
+
+    Collaboration:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          example: 1
+        noteId:
+          type: integer
+          example: 1
+
+    PasswordReset:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        otp:
+          type: string
+          example: "123456"
+        expiry:
+          type: string
+          format: date-time
+          example: "2025-02-02T00:00:00Z"
+        userId:
+          type: integer
+          example: 1
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-02-02T00:00:00Z"

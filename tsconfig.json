@@ -3,7 +3,7 @@
     "outDir": "dist",
     "sourceMap": true,
     "target": "esnext",
-    "module": "commonjs",
+    "module": "nodenext",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
@@ -13,6 +13,6 @@
   "include": [
     "./*.js",
     "src/**/*.ts",
-    "test/**/*.ts",
-  ],
+    "test/**/*.ts"
+  ]
 }

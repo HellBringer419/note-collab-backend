@@ -4,15 +4,16 @@ import {
   InferAttributes,
   InferCreationAttributes,
   CreationOptional,
+  NonAttribute,
 } from "@sequelize/core";
 import {
   Attribute,
   PrimaryKey,
   AutoIncrement,
   NotNull,
-  ForeignKey,
+  BelongsTo,
 } from "@sequelize/core/decorators-legacy";
-import User from "./User"; // assuming User model is in the same folder
+import User from "./User";
 
 export class Note extends Model<
   InferAttributes<Note>,
@@ -32,8 +33,11 @@ export class Note extends Model<
   declare description: string;
 
   @Attribute(DataTypes.INTEGER)
-  @ForeignKey(() => User)
+  @NotNull
   declare createdBy: number;
+
+  @BelongsTo(() => User, "createdBy")
+  declare CreatedBy?: NonAttribute<User>;
 
   // Timestamps
   @Attribute(DataTypes.DATE)
@@ -42,5 +46,4 @@ export class Note extends Model<
   @Attribute(DataTypes.DATE)
   declare updatedAt: CreationOptional<Date>;
 }
-Note.belongsTo(User, { foreignKey: "createdBy" });
 export default Note;

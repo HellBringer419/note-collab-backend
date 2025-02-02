@@ -4,11 +4,14 @@ import {
   InferAttributes,
   InferCreationAttributes,
   CreationOptional,
+  NonAttribute,
 } from "@sequelize/core";
 import {
   Attribute,
   PrimaryKey,
   AutoIncrement,
+  NotNull,
+  BelongsTo,
 } from "@sequelize/core/decorators-legacy";
 import User from "./User";
 import Note from "./Note";
@@ -23,13 +26,18 @@ export class Collaboration extends Model<
   declare id: CreationOptional<number>;
 
   @Attribute(DataTypes.INTEGER)
-  @ForeignKey(() => User)
+  @NotNull
   declare userId: number;
 
+  @BelongsTo(() => User, "userId")
+  declare User: NonAttribute<User>;
+
   @Attribute(DataTypes.INTEGER)
-  @ForeignKey(() => Note)
+  @NotNull
   declare noteId: number;
+
+  @BelongsTo(() => Note, "noteId")
+  declare Note: NonAttribute<Note>;
 }
-User.belongsToMany(Note, { through: Collaboration, foreignKey: "userId" });
-Note.belongsToMany(User, { through: Collaboration, foreignKey: "noteId" });
+
 export default Collaboration;

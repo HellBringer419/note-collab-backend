@@ -32,7 +32,9 @@ router.get("/notes", async (req, res) => {
   const collaborators = await Collaboration.findOne({
     where: {
       userId: parseInt(res.locals.user.id),
-      noteId: { [Op.in]: notes.filter((note) => note.id) },
+      noteId: {
+        [Op.in]: notes.map((note) => note.id),
+      },
     },
   });
   if (!collaborators) {

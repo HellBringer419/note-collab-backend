@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
 // Secret key for signing JWTs, should be stored securely (e.g., in environment variables)
-const JWT_SECRET = "your-secret-key"; // Replace with your actual secret key
+const JWT_SECRET = process.env.JWT_SECRET ?? "your-secret-key"; // Replace with your actual secret key
 
 // Middleware to check if user is authenticated
 export const verifyUserRest = (
@@ -15,7 +15,8 @@ export const verifyUserRest = (
 
   // If no token is found, respond with an error
   if (!token) {
-    return res.status(401).json({ message: "Authentication required" });
+    res.statusCode = 401;
+    throw new Error("Authentication required");
   }
 
   try {
@@ -26,6 +27,7 @@ export const verifyUserRest = (
     next(); // Continue to the next middleware or route handler
   } catch (error) {
     // If token is invalid or expired, respond with an error
-    return res.status(401).json({ message: "Invalid or expired token" });
+    res.statusCode = 401;
+    throw new Error("Invalid or expired token");
   }
 };

@@ -1,15 +1,17 @@
 import {
-  Sequelize,
   DataTypes,
   Model,
   InferAttributes,
   InferCreationAttributes,
   CreationOptional,
+  NonAttribute,
 } from "@sequelize/core";
 import {
   Attribute,
   PrimaryKey,
   AutoIncrement,
+  NotNull,
+  BelongsTo,
 } from "@sequelize/core/decorators-legacy";
 import User from "./User";
 import Note from "./Note";
@@ -23,12 +25,18 @@ export class NoteHistory extends Model<
   declare id: CreationOptional<number>;
 
   @Attribute(DataTypes.INTEGER)
-  @ForeignKey(() => Note)
+  @NotNull
   declare noteId: number;
 
+  @BelongsTo(() => Note, "noteId")
+  declare Note?: NonAttribute<Note>;
+
   @Attribute(DataTypes.INTEGER)
-  @ForeignKey(() => User)
+  @NotNull
   declare changedBy: number;
+
+  @BelongsTo(() => User, "changedBy")
+  declare ChangedBy?: NonAttribute<User>;
 
   @Attribute(DataTypes.STRING)
   declare prevTitle: string;
@@ -45,10 +53,5 @@ export class NoteHistory extends Model<
   @Attribute(DataTypes.DATE)
   declare createdAt: CreationOptional<Date>;
 }
-
-User.hasMany(NoteHistory, { foreignKey: "changedBy" });
-NoteHistory.belongsTo(User, { foreignKey: "changedBy" });
-Note.hasMany(NoteHistory, { foreignKey: "noteId" });
-NoteHistory.belongsTo(Note, { foreignKey: "noteId" });
 
 export default NoteHistory;

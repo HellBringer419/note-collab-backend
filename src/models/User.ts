@@ -11,7 +11,6 @@ import {
   AutoIncrement,
   NotNull,
 } from "@sequelize/core/decorators-legacy";
-import { Note } from "./Note";
 
 export class User extends Model<
   InferAttributes<User>,
@@ -36,6 +35,5 @@ export class User extends Model<
   @Attribute(DataTypes.DATE)
   declare joinedOn: CreationOptional<Date>;
 }
-User.hasMany(Note, { foreignKey: "createdBy" });
 
 export default User;

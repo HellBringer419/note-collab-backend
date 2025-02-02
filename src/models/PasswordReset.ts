@@ -4,12 +4,14 @@ import {
   InferAttributes,
   InferCreationAttributes,
   CreationOptional,
+  NonAttribute,
 } from "@sequelize/core";
 import {
   Attribute,
-  ForeignKey,
   PrimaryKey,
   AutoIncrement,
+  BelongsTo,
+  NotNull,
 } from "@sequelize/core/decorators-legacy";
 import User from "./User";
 
@@ -29,13 +31,14 @@ export class PasswordReset extends Model<
   declare expiry: Date;
 
   @Attribute(DataTypes.INTEGER)
-  @ForeignKey(() => User)
+  @NotNull
   declare userId: number;
+
+  @BelongsTo(() => User, "userId")
+  declare User?: NonAttribute<User>;
 
   @Attribute(DataTypes.DATE)
   declare createdAt: CreationOptional<Date>;
 }
-User.hasMany(PasswordReset, { foreignKey: "userId" });
-PasswordReset.belongsTo(User, { foreignKey: "userId" });
 
 export default PasswordReset;

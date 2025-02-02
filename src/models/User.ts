@@ -10,8 +10,19 @@ import {
   PrimaryKey,
   AutoIncrement,
   NotNull,
+  Table,
 } from "@sequelize/core/decorators-legacy";
 
+@Table({
+  defaultScope: {
+    attributes: { exclude: ["password"] },
+  },
+  scopes: {
+    includePassword: {
+      attributes: { include: ["password"] },
+    },
+  },
+})
 export class User extends Model<
   InferAttributes<User>,
   InferCreationAttributes<User>
@@ -38,18 +49,6 @@ export class User extends Model<
   @Attribute(DataTypes.STRING)
   @NotNull
   declare password?: string;
-
-  // Default scope to exclude the password field
-  static defaultScope = {
-    attributes: { exclude: ["password"] },
-  };
-
-  // Static scope to include password when needed
-  static scopes = {
-    includePassword: {
-      attributes: { include: ["password"] },
-    },
-  };
 }
 
 export default User;

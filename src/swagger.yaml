@@ -300,13 +300,9 @@ components:
         description:
           type: string
           example: "Updated notes from today's meeting"
-        changedBy:
-          type: integer
-          example: 1
       required:
         - title
         - description
-        - changedBy
 
     User:
       type: object

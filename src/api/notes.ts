@@ -28,19 +28,27 @@ router.get("/", async (req, res) => {
     res.statusCode = 403;
     throw new Error("Missing Tokens");
   }
-  const notes = await Note.findAll({ include: User });
-  const collaborators = await Collaboration.findOne({
+  const collaborators = await Collaboration.findAll({
+    attributes: ["noteId"],
     where: {
       userId: parseInt(res.locals.user.id),
-      noteId: {
-        [Op.in]: notes.map((note) => note.id),
-      },
     },
   });
-  if (!collaborators) {
-    res.statusCode = 403;
-    throw new Error("You don't have the permission to read this Note");
-  }
+  const notes = await Note.findAll({
+    where: {
+      [Op.or]: [
+        {
+          id: {
+            [Op.in]: collaborators.map((c) => c.noteId),
+          },
+        },
+        {
+          createdBy: parseInt(res.locals.user.id),
+        },
+      ],
+    },
+    include: User,
+  });
   res.json(notes);
 });
 
@@ -57,6 +65,10 @@ router.get("/:id", async (req, res) => {
 
 // Update a Note
 router.put("/:id", async (req, res) => {
+  if (!res.locals.user?.id) {
+    res.statusCode = 403;
+    throw new Error("Missing Tokens");
+  }
   const noteId = req.params.id;
   const { title, description } = req.body;
 
@@ -67,9 +79,9 @@ router.put("/:id", async (req, res) => {
   }
 
   // Create history before updating
-  const history = await NoteHistory.create({
+  await NoteHistory.create({
     noteId: note.id,
-    changedBy: req.body.changedBy,
+    changedBy: res.locals.user.id,
     prevTitle: note.title,
     prevDescription: note.description,
     newTitle: title,
@@ -82,8 +94,21 @@ router.put("/:id", async (req, res) => {
 
 // Delete a Note
 router.delete("/:id", async (req, res) => {
+  if (!res.locals.user?.id) {
+    res.statusCode = 403;
+    throw new Error("Missing Tokens");
+  }
   const noteId = req.params.id;
   await Note.destroy({ where: { id: noteId } });
+  await NoteHistory.create({
+    noteId: parseInt(noteId),
+    changedBy: res.locals.user.id,
+    prevTitle: "",
+    prevDescription: "",
+    newTitle: "",
+    newDescription: "",
+  });
+
   res.send("Note deleted");
 });
 

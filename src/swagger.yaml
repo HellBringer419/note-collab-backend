@@ -14,75 +14,66 @@ paths:
   /auth/register:
     post:
       summary: Register a new user
+      description: Create a new user with email, name, password, and avatar.
       operationId: registerUser
-      security: []
+      tags:
+        - Authentication
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  example: user@example.com
-                name:
-                  type: string
-                  example: John Doe
+              $ref: "#/components/schemas/RegisterRequest"
       responses:
         "200":
-          description: User registered successfully
+          description: User successfully registered
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  id:
-                    type: integer
-                    example: 1
-                  email:
+                  user:
+                    $ref: "#/components/schemas/User"
+                  token:
                     type: string
-                    example: user@example.com
-                  name:
-                    type: string
-                    example: John Doe
+                    example: "jwt_token_here"
         "400":
-          description: Bad Request
+          description: Bad request, invalid input
+        "500":
+          description: Server error
 
   /auth/login:
     post:
-      summary: Login an existing user
+      summary: Login to an existing account
+      description: Authenticate a user with email and password, return a JWT token if credentials are valid.
       operationId: loginUser
-      security: []
+      tags:
+        - Authentication
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  example: user@example.com
+              $ref: "#/components/schemas/LoginRequest"
       responses:
         "200":
-          description: User logged in successfully
+          description: Login successful
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  id:
-                    type: integer
-                    example: 1
-                  email:
+                  user:
+                    $ref: "#/components/schemas/User"
+                  token:
                     type: string
-                    example: user@example.com
-                  name:
-                    type: string
-                    example: John Doe
+                    example: "jwt_token_here"
+        "403":
+          description: Invalid credentials
         "404":
           description: User not found
+        "500":
+          description: Server error
 
   /auth/password-reset:
     post:
@@ -94,11 +85,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  example: user@example.com
+              $ref: "#/components/schemas/PasswordResetRequest"
       responses:
         "200":
           description: OTP sent to the user's email
@@ -115,14 +102,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  example: user@example.com
-                otp:
-                  type: string
-                  example: "123456"
+              $ref: "#/components/schemas/VerifyOtpRequest"
       responses:
         "200":
           description: OTP verified successfully
@@ -138,34 +118,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                title:
-                  type: string
-                  example: "Meeting Notes"
-                description:
-                  type: string
-                  example: "Notes from today's meeting"
-                createdBy:
-                  type: integer
-                  example: 1
+              $ref: "#/components/schemas/CreateNoteRequest"
       responses:
         "200":
           description: Note created successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                    example: 1
-                  title:
-                    type: string
-                    example: "Meeting Notes"
-                  description:
-                    type: string
-                    example: "Notes from today's meeting"
+                $ref: "#/components/schemas/Note"
         "400":
           description: Bad Request
 
@@ -180,20 +140,7 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                      example: 1
-                    title:
-                      type: string
-                      example: "Meeting Notes"
-                    description:
-                      type: string
-                      example: "Notes from today's meeting"
-                    createdBy:
-                      type: integer
-                      example: 1
+                  $ref: "#/components/schemas/Note"
 
   /notes/{id}:
     put:
@@ -211,34 +158,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                title:
-                  type: string
-                  example: "Updated Meeting Notes"
-                description:
-                  type: string
-                  example: "Updated notes from today's meeting"
-                changedBy:
-                  type: integer
-                  example: 1
+              $ref: "#/components/schemas/UpdateNoteRequest"
       responses:
         "200":
           description: Note updated successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                    example: 1
-                  title:
-                    type: string
-                    example: "Updated Meeting Notes"
-                  description:
-                    type: string
-                    example: "Updated notes from today's meeting"
+                $ref: "#/components/schemas/Note"
         "404":
           description: Note not found
 
@@ -277,14 +204,7 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    userId:
-                      type: integer
-                      example: 1
-                    noteId:
-                      type: integer
-                      example: 1
+                  $ref: "#/components/schemas/Collaboration"
 
 components:
   securitySchemes:
@@ -292,7 +212,102 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
   schemas:
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        name:
+          type: string
+          example: "John Doe"
+        password:
+          type: string
+          format: password
+          example: "password123"
+        avatar:
+          type: string
+          format: uri
+          example: "https://example.com/avatar.png"
+      required:
+        - email
+        - name
+        - password
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          format: password
+          example: "password123"
+      required:
+        - email
+        - password
+
+    PasswordResetRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          example: user@example.com
+      required:
+        - email
+
+    VerifyOtpRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          example: user@example.com
+        otp:
+          type: string
+          example: "123456"
+      required:
+        - email
+        - otp
+
+    CreateNoteRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Meeting Notes"
+        description:
+          type: string
+          example: "Notes from today's meeting"
+        createdBy:
+          type: integer
+          example: 1
+      required:
+        - title
+        - description
+        - createdBy
+
+    UpdateNoteRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Updated Meeting Notes"
+        description:
+          type: string
+          example: "Updated notes from today's meeting"
+        changedBy:
+          type: integer
+          example: 1
+      required:
+        - title
+        - description
+        - changedBy
+
     User:
       type: object
       properties:
@@ -312,6 +327,8 @@ components:
 
     Note:
       type: object
+      required:
+        - id
       properties:
         id:
           type: integer

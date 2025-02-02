@@ -8,7 +8,7 @@ import { Op } from "@sequelize/core";
 const router = express.Router();
 
 // Create a Note
-router.post("/notes", async (req, res) => {
+router.post("/", async (req, res) => {
   if (!res.locals.user?.id) {
     res.statusCode = 403;
     throw new Error("Missing Tokens");
@@ -23,7 +23,7 @@ router.post("/notes", async (req, res) => {
 });
 
 // Get Notes
-router.get("/notes", async (req, res) => {
+router.get("/", async (req, res) => {
   if (!res.locals.user?.id) {
     res.statusCode = 403;
     throw new Error("Missing Tokens");
@@ -45,7 +45,7 @@ router.get("/notes", async (req, res) => {
 });
 
 // Get Specific Note
-router.get("/notes/:id", async (req, res) => {
+router.get("/:id", async (req, res) => {
   const noteId = req.params.id;
   const note = await Note.findByPk(noteId);
   if (!note) {
@@ -56,7 +56,7 @@ router.get("/notes/:id", async (req, res) => {
 });
 
 // Update a Note
-router.put("/notes/:id", async (req, res) => {
+router.put("/:id", async (req, res) => {
   const noteId = req.params.id;
   const { title, description } = req.body;
 
@@ -81,14 +81,14 @@ router.put("/notes/:id", async (req, res) => {
 });
 
 // Delete a Note
-router.delete("/notes/:id", async (req, res) => {
+router.delete("/:id", async (req, res) => {
   const noteId = req.params.id;
   await Note.destroy({ where: { id: noteId } });
   res.send("Note deleted");
 });
 
 // Get Collaborators for a Note
-router.get("/notes/:id/collaborators", async (req, res) => {
+router.get("/:id/collaborators", async (req, res) => {
   const noteId = req.params.id;
   const collaborators = await Collaboration.findAll({
     where: { noteId },

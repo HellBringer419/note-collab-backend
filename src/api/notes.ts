@@ -47,7 +47,15 @@ router.get("/", async (req, res) => {
         },
       ],
     },
-    include: User,
+    include: [
+      { model: User, attributes: ["id"] },
+      {
+        model: Collaboration,
+        attributes: ["id", "userId", "noteId"],
+        include: { model: User, attributes: ["id", "name", "avatar"] },
+      },
+    ],
+    logging: console.log,
   });
   res.json(notes);
 });
@@ -120,6 +128,25 @@ router.get("/:id/collaborators", async (req, res) => {
     include: User,
   });
   res.json(collaborators);
+});
+
+router.post("/invite", async (req, res) => {
+  if (!res.locals.user?.id) {
+    res.statusCode = 403;
+    throw new Error("Missing Tokens");
+  }
+  const { noteId, email } = req.body;
+  const user = await User.findOne({ where: { email } });
+  if (!user) {
+    res.statusCode = 404;
+    throw new Error("User isn't on the platform");
+  }
+  // TODO: send an email for register if user doesn't exist
+  const collaboration = await Collaboration.create({
+    userId: user.id,
+    noteId: noteId,
+  });
+  res.send(collaboration);
 });
 
 export default router;

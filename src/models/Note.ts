@@ -12,8 +12,10 @@ import {
   AutoIncrement,
   NotNull,
   BelongsTo,
+  HasMany,
 } from "@sequelize/core/decorators-legacy";
 import User from "./User";
+import Collaboration from "./Collaboration";
 
 export class Note extends Model<
   InferAttributes<Note>,
@@ -38,6 +40,9 @@ export class Note extends Model<
 
   @BelongsTo(() => User, "createdBy")
   declare CreatedBy?: NonAttribute<User>;
+
+  @HasMany(() => Collaboration, "noteId")
+  declare Collaborations?: NonAttribute<Collaboration[]>;
 
   // Timestamps
   @Attribute(DataTypes.DATE)

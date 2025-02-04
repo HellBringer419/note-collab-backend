@@ -37,7 +37,7 @@ export class Collaboration extends Model<
   declare noteId: number;
 
   @BelongsTo(() => Note, "noteId")
-  declare Note: NonAttribute<Note>;
+  declare Note?: NonAttribute<Note>;
 }
 
 export default Collaboration;

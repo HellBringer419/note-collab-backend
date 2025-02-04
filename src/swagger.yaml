@@ -143,6 +143,24 @@ paths:
                   $ref: "#/components/schemas/Note"
 
   /notes/{id}:
+    get:
+      summary: Get particular notes
+      operationId: getNote
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Note ID
+      responses:
+        "200":
+          description: Gets requested note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+
     put:
       summary: Update an existing note
       operationId: updateNote
@@ -205,6 +223,53 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Collaboration"
+
+  /notes/invite:
+    post:
+      summary: Invite a user to collaborate on a note.
+      operationId: inviteCollaborator
+      tags:
+        - Collaboration
+      requestBody:
+        description: Data required to invite a user to collaborate on a note.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                noteId:
+                  type: integer
+                  description: The ID of the note to collaborate on.
+                  example: 1
+                email:
+                  type: string
+                  format: email
+                  description: The email of the user to invite.
+                  example: user@example.com
+              required:
+                - noteId
+                - email
+      responses:
+        "200":
+          description: Successfully invited user to collaborate on the note.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: ID of the created collaboration.
+                    example: 42
+                  userId:
+                    type: integer
+                    description: ID of the user being invited to collaborate.
+                    example: 123
+                  noteId:
+                    type: integer
+                    description: ID of the note that the collaboration is for.
+                    example: 1
 
 components:
   securitySchemes:
@@ -320,6 +385,9 @@ components:
           type: string
           format: date-time
           example: "2025-02-02T00:00:00Z"
+        avatar:
+          type: string
+          format: url
 
     Note:
       type: object
@@ -338,6 +406,19 @@ components:
         createdBy:
           type: integer
           example: 1
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        CreatedBy:
+          $ref: "#/components/schemas/User"
+        Collaborations:
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/Collaboration"
 
     Collaboration:
       type: object
@@ -351,6 +432,9 @@ components:
         noteId:
           type: integer
           example: 1
+        User:
+          nullable: true
+          $ref: "#/components/schemas/User"
 
     PasswordReset:
       type: object

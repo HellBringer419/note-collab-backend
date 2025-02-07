@@ -4,7 +4,17 @@ import NoteHistory from "../models/NoteHistory";
 import User from "../models/User";
 import Collaboration from "../models/Collaboration";
 import { Op } from "@sequelize/core";
-import { createNoteSchema, createNoteType, inviteCollaboratorSchema, inviteCollaboratorType, noteByIdSchema, noteByIdType, updateNoteSchema, updateNoteType } from "../validators/note-validators";
+import {
+  createNoteSchema,
+  createNoteType,
+  inviteCollaboratorSchema,
+  inviteCollaboratorType,
+  noteByIdSchema,
+  noteByIdType,
+  updateNoteSchema,
+  updateNoteType,
+} from "../validators/note-validators";
+import { io } from "..";
 
 const router = express.Router();
 
@@ -14,18 +24,19 @@ router.post("/", async (req, res) => {
     res.statusCode = 403;
     throw new Error("Missing Tokens");
   }
-  const result = createNoteSchema.safeParse(req.body)
+  const result = createNoteSchema.safeParse(req.body);
   if (!result.success) {
     res.status(400).json({ errors: result.error.format() });
     return;
   }
-  const { title, description }: createNoteType = result.data; 
+  const { title, description }: createNoteType = result.data;
   const note = await Note.create({
     title,
     description: description || null,
     createdBy: res.locals.user.id,
   });
-  res.json(note);
+
+  res.status(201).send(note);
 });
 
 // Get Notes
@@ -68,7 +79,7 @@ router.get("/", async (req, res) => {
 
 // Get Specific Note
 router.get("/:id", async (req, res) => {
-  const result = noteByIdSchema.safeParse(req.params)
+  const result = noteByIdSchema.safeParse(req.params);
   if (!result.success) {
     res.status(400).json({ errors: result.error.format() });
     return;
@@ -88,13 +99,13 @@ router.put("/:id", async (req, res) => {
     res.statusCode = 403;
     throw new Error("Missing Tokens");
   }
-  const resultId = noteByIdSchema.safeParse(req.params)
+  const resultId = noteByIdSchema.safeParse(req.params);
   if (!resultId.success) {
     res.status(400).json({ errors: resultId.error.format() });
     return;
   }
-  
-  const result = updateNoteSchema.safeParse(req.query)
+
+  const result = updateNoteSchema.safeParse(req.query);
   if (!result.success) {
     res.status(400).json({ errors: result.error.format() });
     return;
@@ -119,7 +130,8 @@ router.put("/:id", async (req, res) => {
     newDescription: description || null,
   });
 
-  await note.update({ title, description });
+  const updatedNote = await note.update({ title, description });
+  io.to(`note_${note.id}`).emit("note_update", updatedNote);
   res.json(note);
 });
 
@@ -129,7 +141,7 @@ router.delete("/:id", async (req, res) => {
     res.statusCode = 403;
     throw new Error("Missing Tokens");
   }
-  const result = noteByIdSchema.safeParse(req.params)
+  const result = noteByIdSchema.safeParse(req.params);
   if (!result.success) {
     res.status(400).json({ errors: result.error.format() });
     return;
@@ -144,13 +156,13 @@ router.delete("/:id", async (req, res) => {
     newTitle: "",
     newDescription: "",
   });
-
+  io.to(`note_${id}`).emit("note_delete", id);
   res.send("Note deleted");
 });
 
 // Get Collaborators for a Note
 router.get("/:id/collaborators", async (req, res) => {
-  const result = noteByIdSchema.safeParse(req.params)
+  const result = noteByIdSchema.safeParse(req.params);
   if (!result.success) {
     res.status(400).json({ errors: result.error.format() });
     return;
@@ -168,7 +180,7 @@ router.post("/invite", async (req, res) => {
     res.statusCode = 403;
     throw new Error("Missing Tokens");
   }
-  const result = inviteCollaboratorSchema.safeParse(req.params)
+  const result = inviteCollaboratorSchema.safeParse(req.params);
   if (!result.success) {
     res.status(400).json({ errors: result.error.format() });
     return;

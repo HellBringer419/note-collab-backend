@@ -1,0 +1,194 @@
+asyncapi: 3.0.0
+info:
+  title: Note Collaboration Tool
+  version: 1.0.0
+  description: |
+    This API provides real-time collaboration features for notes using WebSockets and RESTful endpoints.
+    WebSocket events are used to broadcast updates to collaborators, and RESTful endpoints handle CRUD operations.
+  contact:
+    name: Uday Narayan Mukherjee
+  license:
+    name: MIT
+servers:
+  production:
+    url: ws://localhost:3000
+    protocol: ws
+    description: Production WebSocket server
+  http:
+    url: http://localhost:3000
+    protocol: http
+    description: Production HTTP server
+channels:
+  /subscribe-note:
+    subscribe:
+      operationId: subscribeNote
+      summary: Subscribe to a note's updates
+      message:
+        payload:
+          type: integer
+          description: The ID of the note to subscribe to
+          example: 1
+        headers:
+          type: object
+          properties:
+            token:
+              type: string
+              description: Authentication token
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        "200":
+          description: Successfully subscribed to the note
+        "400":
+          description: Invalid payload or note not found
+        "403":
+          description: Missing or invalid authentication token
+  /note_update:
+    publish:
+      operationId: noteUpdate
+      summary: Broadcast note updates to collaborators
+      message:
+        payload:
+          type: object
+          properties:
+            noteId:
+              type: integer
+              description: The ID of the updated note
+              example: 1
+            title:
+              type: string
+              description: The updated title of the note
+              example: "Updated Meeting Notes"
+            description:
+              type: string
+              description: The updated description of the note
+              example: "Updated notes from today's meeting"
+            updatedBy:
+              type: integer
+              description: The ID of the collaborator who made the update
+              example: 2
+            updatedAt:
+              type: string
+              format: date-time
+              description: The timestamp of the update
+              example: "2023-10-01T12:34:56Z"
+  /note_delete:
+    publish:
+      operationId: noteDelete
+      summary: Broadcast note deletion to collaborators
+      message:
+        payload:
+          type: integer
+          description: The ID of the deleted note
+          example: 1
+operations:
+  createNote:
+    action: send
+    channel: http://localhost:3000/
+    summary: Create a new note
+    description: Create a new note and initialize a WebSocket room for it.
+    tags:
+      - name: Notes
+    message:
+      payload:
+        type: object
+        properties:
+          title:
+            type: string
+            description: The title of the note
+            example: "Meeting Notes"
+          description:
+            type: string
+            nullable: true
+            description: The description of the note
+            example: "Notes from today's meeting"
+          createdBy:
+            type: integer
+            description: The ID of the user creating the note
+            example: 1
+      headers:
+        type: object
+        properties:
+          token:
+            type: string
+            description: Authentication token
+            example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    responses:
+      "201":
+        description: Note created successfully
+      "400":
+        description: Invalid input data
+      "403":
+        description: Missing or invalid authentication token
+  updateNote:
+    action: send
+    channel: http://localhost:3000/{id}
+    summary: Update an existing note
+    description: Update a note and broadcast the changes to all collaborators.
+    tags:
+      - name: Notes
+    message:
+      payload:
+        type: object
+        properties:
+          title:
+            type: string
+            description: The updated title of the note
+            example: "Updated Meeting Notes"
+          description:
+            type: string
+            nullable: true
+            description: The updated description of the note
+            example: "Updated notes from today's meeting"
+      headers:
+        type: object
+        properties:
+          token:
+            type: string
+            description: Authentication token
+            example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    responses:
+      "200":
+        description: Note updated successfully
+      "400":
+        description: Invalid input data
+      "403":
+        description: Missing or invalid authentication token
+      "404":
+        description: Note not found
+  deleteNote:
+    action: send
+    channel: http://localhost:3000/{id}
+    summary: Delete a note
+    description: Delete a note and broadcast the deletion to all collaborators.
+    tags:
+      - name: Notes
+    message:
+      payload:
+        type: object
+        properties:
+          id:
+            type: integer
+            description: The ID of the note to delete
+            example: 1
+      headers:
+        type: object
+        properties:
+          token:
+            type: string
+            description: Authentication token
+            example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    responses:
+      "200":
+        description: Note deleted successfully
+      "400":
+        description: Invalid input data
+      "403":
+        description: Missing or invalid authentication token
+      "404":
+        description: Note not found
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

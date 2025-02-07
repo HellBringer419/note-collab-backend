@@ -208,7 +208,7 @@ paths:
       summary: Get collaborators for a note
       operationId: getCollaborators
       parameters:
-        - name: id
+        - name: noteId
           in: path
           required: true
           schema:
@@ -288,14 +288,18 @@ components:
           example: "user@example.com"
         name:
           type: string
+          minLength: 3
           example: "John Doe"
         password:
           type: string
+          minLength: 8
+          maxLength: 60
           format: password
           example: "password123"
         avatar:
           type: string
           format: uri
+          nullable: true
           example: "https://example.com/avatar.png"
       required:
         - email
@@ -311,6 +315,8 @@ components:
           example: "user@example.com"
         password:
           type: string
+          minLength: 8
+          maxLength: 60
           format: password
           example: "password123"
       required:
@@ -334,6 +340,7 @@ components:
           example: user@example.com
         otp:
           type: string
+          minLength: 6
           example: "123456"
       required:
         - email
@@ -344,30 +351,28 @@ components:
       properties:
         title:
           type: string
+          min: 3
           example: "Meeting Notes"
         description:
           type: string
+          nullable: true
           example: "Notes from today's meeting"
-        createdBy:
-          type: integer
-          example: 1
       required:
         - title
-        - description
-        - createdBy
 
     UpdateNoteRequest:
       type: object
       properties:
         title:
           type: string
+          min: 3
           example: "Updated Meeting Notes"
         description:
           type: string
+          nullable: true
           example: "Updated notes from today's meeting"
       required:
         - title
-        - description
 
     User:
       type: object

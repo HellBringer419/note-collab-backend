@@ -4,13 +4,30 @@ import bcrypt from "bcrypt";
 import User from "../models/User";
 import PasswordReset from "../models/PasswordReset";
 import generateOTP from "../utils/generateOTP";
-const router = express.Router();
+import {
+  loginSchema,
+  loginType,
+  passwordResetSchema,
+  passwordResetType,
+  registerSchema,
+  registerType,
+  verifyOtpSchema,
+  verifyOtpType,
+} from "../validators/auth-validators";
 
+const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET ?? "your-secret-key"; // Replace with your actual secret key
 
 // Register User
 router.post("/register", async (req, res) => {
-  const { email, name, password, avatar } = req.body;
+  // Validate input using Zod
+  const result = registerSchema.safeParse(req.body);
+  if (!result.success) {
+    res.status(400).json({ errors: result.error.format() });
+    return;
+  }
+
+  const { email, name, password, avatar }: registerType = result.data;
   const user = await User.create({
     email,
     name,
@@ -18,18 +35,27 @@ router.post("/register", async (req, res) => {
     joinedOn: new Date(),
     password: await bcrypt.hash(password, 10),
   });
-  // Create a JWT token (you can adjust the payload and expiration time as needed)
+
   const token = jwt.sign(
     user.get({ plain: true }),
     JWT_SECRET, // Secret key (store securely)
     { expiresIn: "1h" }, // Token expires in 1 hour
   );
+
   delete user.password;
   res.json({ user, token });
 });
 
+// Login User
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  // Validate input using Zod
+  const result = loginSchema.safeParse(req.body);
+  if (!result.success) {
+    res.status(400).json({ errors: result.error.format() });
+    return;
+  }
+
+  const { email, password }: loginType = result.data;
   const user = await User.withScope("includePassword").findOne({
     where: { email },
   });
@@ -38,7 +64,6 @@ router.post("/login", async (req, res) => {
     throw new Error("User not found");
   }
 
-  // Compare provided password with the stored hash
   const isMatch = user.password
     ? await bcrypt.compare(password, user.password)
     : false;
@@ -47,12 +72,9 @@ router.post("/login", async (req, res) => {
     throw new Error("Invalid credentials");
   }
 
-  // Create a JWT token (you can adjust the payload and expiration time as needed)
-  const token = jwt.sign(
-    user.get({ plain: true }),
-    JWT_SECRET, // Secret key (store securely)
-    { expiresIn: "1h" }, // Token expires in 1 hour
-  );
+  const token = jwt.sign(user.get({ plain: true }), JWT_SECRET, {
+    expiresIn: "1h",
+  });
 
   delete user.password;
   res.json({ user, token });
@@ -60,7 +82,14 @@ router.post("/login", async (req, res) => {
 
 // Request Password Reset
 router.post("/password-reset", async (req, res) => {
-  const { email } = req.body;
+  // Validate input using Zod
+  const result = passwordResetSchema.safeParse(req.body);
+  if (!result.success) {
+    res.status(400).json({ errors: result.error.format() });
+    return;
+  }
+
+  const { email }: passwordResetType = result.data;
   const user = await User.findOne({ where: { email } });
   if (!user) {
     res.statusCode = 404;
@@ -77,7 +106,14 @@ router.post("/password-reset", async (req, res) => {
 
 // Verify OTP
 router.post("/verify-otp", async (req, res) => {
-  const { email, otp } = req.body;
+  // Validate input using Zod
+  const result = verifyOtpSchema.safeParse(req.body);
+  if (!result.success) {
+    res.status(400).json({ errors: result.error.format() });
+    return;
+  }
+
+  const { email, otp }: verifyOtpType = result.data;
   const user = await User.findOne({ where: { email } });
   if (!user) {
     res.statusCode = 404;
@@ -95,4 +131,5 @@ router.post("/verify-otp", async (req, res) => {
 
   res.send("OTP verified");
 });
+
 export default router;

@@ -15,10 +15,10 @@ export const updateNoteSchema = z.object({
 export type updateNoteType = z.infer<typeof updateNoteSchema>;
 
 // Validator for fetching a specific note (using note ID)
-export const getNoteByIdSchema = z.object({
+export const noteByIdSchema = z.object({
   id: z.number(),
 });
-export type getNoteByIdType = z.infer<typeof getNoteByIdSchema>;
+export type noteByIdType = z.infer<typeof noteByIdSchema>;
 
 // Validator for inviting collaborators to a note
 export const inviteCollaboratorSchema = z.object({

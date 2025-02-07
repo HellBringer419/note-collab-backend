@@ -31,8 +31,7 @@ export class Note extends Model<
   declare title: string;
 
   @Attribute(DataTypes.STRING)
-  @NotNull
-  declare description: string;
+  declare description: string | null;
 
   @Attribute(DataTypes.INTEGER)
   @NotNull

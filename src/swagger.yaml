@@ -208,7 +208,7 @@ paths:
       summary: Get collaborators for a note
       operationId: getCollaborators
       parameters:
-        - name: noteId
+        - name: id
           in: path
           required: true
           schema:
@@ -351,7 +351,7 @@ components:
       properties:
         title:
           type: string
-          min: 3
+          minLength: 3
           example: "Meeting Notes"
         description:
           type: string
@@ -365,7 +365,7 @@ components:
       properties:
         title:
           type: string
-          min: 3
+          minLength: 3
           example: "Updated Meeting Notes"
         description:
           type: string
@@ -440,24 +440,3 @@ components:
         User:
           nullable: true
           $ref: "#/components/schemas/User"
-
-    PasswordReset:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 1
-        otp:
-          type: string
-          example: "123456"
-        expiry:
-          type: string
-          format: date-time
-          example: "2025-02-02T00:00:00Z"
-        userId:
-          type: integer
-          example: 1
-        createdAt:
-          type: string
-          format: date-time
-          example: "2025-02-02T00:00:00Z"

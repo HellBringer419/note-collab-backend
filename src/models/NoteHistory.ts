@@ -39,18 +39,21 @@ export class NoteHistory extends Model<
   declare ChangedBy?: NonAttribute<User>;
 
   @Attribute(DataTypes.STRING)
+  @NotNull
   declare prevTitle: string;
 
   @Attribute(DataTypes.STRING)
-  declare prevDescription: string;
+  declare prevDescription: string | null;
 
   @Attribute(DataTypes.STRING)
+  @NotNull
   declare newTitle: string;
 
   @Attribute(DataTypes.STRING)
-  declare newDescription: string;
+  declare newDescription: string | null;
 
   @Attribute(DataTypes.DATE)
+  @NotNull
   declare createdAt: CreationOptional<Date>;
 }
 

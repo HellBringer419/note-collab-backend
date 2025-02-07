@@ -4,6 +4,7 @@ import NoteHistory from "../models/NoteHistory";
 import User from "../models/User";
 import Collaboration from "../models/Collaboration";
 import { Op } from "@sequelize/core";
+import { createNoteSchema, createNoteType, inviteCollaboratorSchema, inviteCollaboratorType, noteByIdSchema, noteByIdType, updateNoteSchema, updateNoteType } from "../validators/note-validators";
 
 const router = express.Router();
 
@@ -13,10 +14,15 @@ router.post("/", async (req, res) => {
     res.statusCode = 403;
     throw new Error("Missing Tokens");
   }
-  const { title, description } = req.body;
+  const result = createNoteSchema.safeParse(req.body)
+  if (!result.success) {
+    res.status(400).json({ errors: result.error.format() });
+    return;
+  }
+  const { title, description }: createNoteType = result.data; 
   const note = await Note.create({
     title,
-    description,
+    description: description || null,
     createdBy: res.locals.user.id,
   });
   res.json(note);
@@ -62,8 +68,13 @@ router.get("/", async (req, res) => {
 
 // Get Specific Note
 router.get("/:id", async (req, res) => {
-  const noteId = req.params.id;
-  const note = await Note.findByPk(noteId);
+  const result = noteByIdSchema.safeParse(req.params)
+  if (!result.success) {
+    res.status(400).json({ errors: result.error.format() });
+    return;
+  }
+  const { id }: noteByIdType = result.data;
+  const note = await Note.findByPk(id);
   if (!note) {
     res.statusCode = 404;
     throw new Error("Note not found");
@@ -77,10 +88,22 @@ router.put("/:id", async (req, res) => {
     res.statusCode = 403;
     throw new Error("Missing Tokens");
   }
-  const noteId = req.params.id;
-  const { title, description } = req.body;
+  const resultId = noteByIdSchema.safeParse(req.params)
+  if (!resultId.success) {
+    res.status(400).json({ errors: resultId.error.format() });
+    return;
+  }
+  
+  const result = updateNoteSchema.safeParse(req.query)
+  if (!result.success) {
+    res.status(400).json({ errors: result.error.format() });
+    return;
+  }
 
-  const note = await Note.findByPk(noteId);
+  const { id }: noteByIdType = resultId.data;
+  const { title, description }: updateNoteType = result.data;
+
+  const note = await Note.findByPk(id);
   if (!note) {
     res.statusCode = 404;
     throw new Error("Note not found");
@@ -91,9 +114,9 @@ router.put("/:id", async (req, res) => {
     noteId: note.id,
     changedBy: res.locals.user.id,
     prevTitle: note.title,
-    prevDescription: note.description,
+    prevDescription: note.description || null,
     newTitle: title,
-    newDescription: description,
+    newDescription: description || null,
   });
 
   await note.update({ title, description });
@@ -106,10 +129,15 @@ router.delete("/:id", async (req, res) => {
     res.statusCode = 403;
     throw new Error("Missing Tokens");
   }
-  const noteId = req.params.id;
-  await Note.destroy({ where: { id: noteId } });
+  const result = noteByIdSchema.safeParse(req.params)
+  if (!result.success) {
+    res.status(400).json({ errors: result.error.format() });
+    return;
+  }
+  const { id }: noteByIdType = result.data;
+  await Note.destroy({ where: { id } });
   await NoteHistory.create({
-    noteId: parseInt(noteId),
+    noteId: id,
     changedBy: res.locals.user.id,
     prevTitle: "",
     prevDescription: "",
@@ -122,9 +150,14 @@ router.delete("/:id", async (req, res) => {
 
 // Get Collaborators for a Note
 router.get("/:id/collaborators", async (req, res) => {
-  const noteId = req.params.id;
+  const result = noteByIdSchema.safeParse(req.params)
+  if (!result.success) {
+    res.status(400).json({ errors: result.error.format() });
+    return;
+  }
+  const { id }: noteByIdType = result.data;
   const collaborators = await Collaboration.findAll({
-    where: { noteId },
+    where: { noteId: id },
     include: User,
   });
   res.json(collaborators);
@@ -135,7 +168,12 @@ router.post("/invite", async (req, res) => {
     res.statusCode = 403;
     throw new Error("Missing Tokens");
   }
-  const { noteId, email } = req.body;
+  const result = inviteCollaboratorSchema.safeParse(req.params)
+  if (!result.success) {
+    res.status(400).json({ errors: result.error.format() });
+    return;
+  }
+  const { noteId, email }: inviteCollaboratorType = result.data;
   const user = await User.findOne({ where: { email } });
   if (!user) {
     res.statusCode = 404;

@@ -16,7 +16,7 @@ export type updateNoteType = z.infer<typeof updateNoteSchema>;
 
 // Validator for fetching a specific note (using note ID)
 export const noteByIdSchema = z.object({
-  id: z.number(),
+  id: z.string().transform(Number),
 });
 export type noteByIdType = z.infer<typeof noteByIdSchema>;
 

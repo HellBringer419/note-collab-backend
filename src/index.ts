@@ -13,6 +13,9 @@ export const io = new Server(httpServer, {
   connectionStateRecovery: {
     skipMiddlewares: true,
   },
+  cors: {
+    origin: "*",
+  },
 });
 
 io.on("connection", async (socket) => {

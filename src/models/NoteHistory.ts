@@ -42,14 +42,14 @@ export class NoteHistory extends Model<
   @NotNull
   declare prevTitle: string;
 
-  @Attribute(DataTypes.STRING)
+  @Attribute(DataTypes.TEXT)
   declare prevDescription: string | null;
 
   @Attribute(DataTypes.STRING)
   @NotNull
   declare newTitle: string;
 
-  @Attribute(DataTypes.STRING)
+  @Attribute(DataTypes.TEXT)
   declare newDescription: string | null;
 
   @Attribute(DataTypes.DATE)

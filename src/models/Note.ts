@@ -30,7 +30,7 @@ export class Note extends Model<
   @NotNull
   declare title: string;
 
-  @Attribute(DataTypes.STRING)
+  @Attribute(DataTypes.TEXT)
   declare description: string | null;
 
   @Attribute(DataTypes.INTEGER)

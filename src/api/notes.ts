@@ -105,7 +105,7 @@ router.put("/:id", async (req, res) => {
     return;
   }
 
-  const result = updateNoteSchema.safeParse(req.query);
+  const result = updateNoteSchema.safeParse(req.body);
   if (!result.success) {
     res.status(400).json({ errors: result.error.format() });
     return;
@@ -147,7 +147,6 @@ router.delete("/:id", async (req, res) => {
     return;
   }
   const { id }: noteByIdType = result.data;
-  await Note.destroy({ where: { id } });
   await NoteHistory.create({
     noteId: id,
     changedBy: res.locals.user.id,
@@ -156,6 +155,7 @@ router.delete("/:id", async (req, res) => {
     newTitle: "",
     newDescription: "",
   });
+  await Note.destroy({ where: { id } });
   io.to(`note_${id}`).emit("note_delete", id);
   res.send("Note deleted");
 });

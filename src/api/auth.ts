@@ -36,13 +36,13 @@ router.post("/register", async (req, res) => {
     password: await bcrypt.hash(password, 10),
   });
 
+  delete user.password;
   const token = jwt.sign(
-    user.get({ plain: true }),
+    { id: user.id, email: user.email, name: user.name },
     JWT_SECRET, // Secret key (store securely)
     { expiresIn: "1h" }, // Token expires in 1 hour
   );
-
-  delete user.password;
+  
   res.json({ user, token });
 });
 
@@ -71,12 +71,13 @@ router.post("/login", async (req, res) => {
     res.statusCode = 403;
     throw new Error("Invalid credentials");
   }
-
-  const token = jwt.sign(user.get({ plain: true }), JWT_SECRET, {
-    expiresIn: "1h",
-  });
-
   delete user.password;
+  const token = jwt.sign(
+    { id: user.id, email: user.email, name: user.name },
+    JWT_SECRET, // Secret key (store securely)
+    { expiresIn: "1h" }, // Token expires in 1 hour
+  );
+    
   res.json({ user, token });
 });
 

@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { createServer } from "http";
 import Note from "./models/Note";
 import { SocketErrorResponse } from "./interfaces/ErrorResponse";
+import { verifyUserWS } from "./middlewares/verify-user";
 
 const port = process.env.PORT || 8080;
 const JWT_SECRET = process.env.JWT_SECRET ?? "your-secret-key"; // Replace with your actual secret key
@@ -64,57 +65,9 @@ io.on("connection", async (socket) => {
     console.log("user disconnected");
   });
 });
-// io.use(async (socket, next) => {
-//   let token = String(socket.handshake.auth.token);
-//   if (!token) {io.use(async (socket, next) => {
-//   let token = String(socket.handshake.auth.token);
-//   if (!token) {
-//     next(new Error("MIssing Token"));
-//   }
 
-//   console.log(token, "from WS");
-//   console.log({ JWT_SECRET });
+io.use(verifyUserWS);
 
-//   // Verify the token (you can use your existing authentication logic)
-//   try {
-//     // Verify the token using JWT secret key
-//     // FIXME: check the difference in the token
-//     const user = jwt.verify(token, JWT_SECRET) as { id: number }; // Assuming the token contains user ID
-//     if (!user) {
-//       next(new Error("Authentication error"));
-//     }
-
-//     // Attach the user to the socket for later use
-//     socket.data.user = user;
-//     next();
-//   } catch (error) {
-//     if (error instanceof Error) next(error);
-//     else next(new Error("Unknown authentication error"));
-//   }
-// });
-//     next(new Error("MIssing Token"));
-//   }
-
-//   console.log(token, "from WS");
-//   console.log({ JWT_SECRET });
-
-//   // Verify the token (you can use your existing authentication logic)
-//   try {
-//     // Verify the token using JWT secret key
-//     // FIXME: check the difference in the token
-//     const user = jwt.verify(token, JWT_SECRET) as { id: number }; // Assuming the token contains user ID
-//     if (!user) {
-//       next(new Error("Authentication error"));
-//     }
-
-//     // Attach the user to the socket for later use
-//     socket.data.user = user;
-//     next();
-//   } catch (error) {
-//     if (error instanceof Error) next(error);
-//     else next(new Error("Unknown authentication error"));
-//   }
-// });
 
 httpServer.listen(port, async () => {
   try {

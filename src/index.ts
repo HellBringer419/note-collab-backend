@@ -4,6 +4,7 @@ import sequelize from "./datasource";
 import jwt from "jsonwebtoken";
 import { createServer } from "http";
 import Note from "./models/Note";
+import { SocketErrorResponse } from "./interfaces/ErrorResponse";
 
 const port = process.env.PORT || 8080;
 const JWT_SECRET = process.env.JWT_SECRET ?? "your-secret-key"; // Replace with your actual secret key
@@ -14,51 +15,95 @@ export const io = new Server(httpServer, {
     skipMiddlewares: true,
   },
   cors: {
-    origin: "*",
+    origin: "http://localhost:5173",
   },
 });
 
 io.on("connection", async (socket) => {
   console.log("Listening to socket connections");
 
-  socket.on("subscribe-note", async (payload: number) => {
+  socket.on("subscribe-note", async (payload: number, callback: (t: SocketErrorResponse) => void) => {
     if (!payload || typeof payload !== "number") {
-      throw new Error("Unaccepted payload");
+      return callback({
+        status: "Bad Request",
+        error: new Error("Unaccepted payload")
+      });
+    }
+
+    if (typeof callback !== "function") {
+      // not an acknowledgement
+      return socket.disconnect();
     }
 
     const note = await Note.findByPk(payload);
     if (!note) {
-      throw new Error("Note not found");
+      return callback({
+        status: "Bad Request",
+        error: new Error("Note not found")
+      });
     }
 
     socket.join(`note_${note.id}`);
+    return callback({
+      status: "Success",
+    })
   });
 
   socket.on("disconnect", () => {
     console.log("user disconnected");
   });
 });
-io.use(async (socket, next) => {
-  let token = String(socket.handshake.query.token);
-  if (!token) {
-    next(new Error("Authentication error"));
-  }
+// io.use(async (socket, next) => {
+//   let token = String(socket.handshake.auth.token);
+//   if (!token) {io.use(async (socket, next) => {
+//   let token = String(socket.handshake.auth.token);
+//   if (!token) {
+//     next(new Error("MIssing Token"));
+//   }
 
-  // Verify the token (you can use your existing authentication logic)
-  try {
-    // Verify the token using JWT secret key
-    const user = jwt.verify(token, JWT_SECRET) as { id: number }; // Assuming the token contains user ID
-    if (!user) {
-      next(new Error("Authentication error"));
-    }
+//   console.log(token, "from WS");
+//   console.log({ JWT_SECRET });
+  
+//   // Verify the token (you can use your existing authentication logic)
+//   try {
+//     // Verify the token using JWT secret key
+//     // FIXME: check the difference in the token
+//     const user = jwt.verify(token, JWT_SECRET) as { id: number }; // Assuming the token contains user ID
+//     if (!user) {
+//       next(new Error("Authentication error"));
+//     }
 
-    // Attach the user to the socket for later use
-    socket.data.user = user;
-    next();
-  } catch (error) {
-    next(new Error("Authentication error"));
-  }
-});
+//     // Attach the user to the socket for later use
+//     socket.data.user = user;
+//     next();
+//   } catch (error) {
+//     if (error instanceof Error) next(error);
+//     else next(new Error("Unknown authentication error"));
+//   }
+// });
+//     next(new Error("MIssing Token"));
+//   }
+
+//   console.log(token, "from WS");
+//   console.log({ JWT_SECRET });
+  
+//   // Verify the token (you can use your existing authentication logic)
+//   try {
+//     // Verify the token using JWT secret key
+//     // FIXME: check the difference in the token
+//     const user = jwt.verify(token, JWT_SECRET) as { id: number }; // Assuming the token contains user ID
+//     if (!user) {
+//       next(new Error("Authentication error"));
+//     }
+
+//     // Attach the user to the socket for later use
+//     socket.data.user = user;
+//     next();
+//   } catch (error) {
+//     if (error instanceof Error) next(error);
+//     else next(new Error("Unknown authentication error"));
+//   }
+// });
 
 httpServer.listen(port, async () => {
   try {

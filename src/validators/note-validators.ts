@@ -3,14 +3,14 @@ import { z } from "zod";
 // Validator for creating a new note
 export const createNoteSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters long"),
-  description: z.string().optional(),
+  description: z.string().optional().nullable(),
 });
 export type createNoteType = z.infer<typeof createNoteSchema>;
 
 // Validator for updating an existing note
 export const updateNoteSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters long"),
-  description: z.string().optional(),
+  description: z.string().optional().nullable(),
 });
 export type updateNoteType = z.infer<typeof updateNoteSchema>;
 

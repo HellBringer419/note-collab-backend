@@ -19,6 +19,9 @@ export const verifyUserRest = (
     throw new Error("Authentication required");
   }
 
+  console.log(token, "from REST");
+  
+
   try {
     // Verify the token using JWT secret key
     const decoded = jwt.verify(token, JWT_SECRET) as { id: number }; // Assuming the token contains user ID

@@ -7,7 +7,7 @@ export const registerSchema = z.object({
     .string()
     .min(8, "Password must be at least 6 characters long")
     .max(60),
-  avatar: z.string().url().optional(), // Avatar is optional
+  avatar: z.string().url().optional().nullable(), // Avatar is optional
 });
 export type registerType = z.infer<typeof registerSchema>;
 

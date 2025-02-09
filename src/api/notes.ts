@@ -79,16 +79,25 @@ router.get("/", async (req, res) => {
 
 // Get Specific Note
 router.get("/:id", async (req, res) => {
+  if (!res.locals.user?.id) {
+    res.statusCode = 403;
+    throw new Error("Missing Tokens");
+  }
+  
   const result = noteByIdSchema.safeParse(req.params);
   if (!result.success) {
     res.status(400).json({ errors: result.error.format() });
     return;
   }
   const { id }: noteByIdType = result.data;
-  const note = await Note.findByPk(id);
+  const note = await Note.findByPk(id, { include: Collaboration });
   if (!note) {
     res.statusCode = 404;
     throw new Error("Note not found");
+  }
+  if (note.createdBy !== res.locals.user.id && !note.Collaborations?.some((c) => c.userId === res.locals.user.id)) {
+    res.statusCode = 403;
+    throw new Error("Forbidden");
   }
   res.json(note);
 });
@@ -114,10 +123,15 @@ router.put("/:id", async (req, res) => {
   const { id }: noteByIdType = resultId.data;
   const { title, description }: updateNoteType = result.data;
 
-  const note = await Note.findByPk(id);
+  const note = await Note.findByPk(id, { include: Collaboration });
   if (!note) {
     res.statusCode = 404;
     throw new Error("Note not found");
+  }
+
+  if (note.createdBy !== res.locals.user.id && !note.Collaborations?.some((c) => c.userId === res.locals.user.id)) {
+    res.statusCode = 403;
+    throw new Error("Forbidden");
   }
 
   // Create history before updating
@@ -147,6 +161,17 @@ router.delete("/:id", async (req, res) => {
     return;
   }
   const { id }: noteByIdType = result.data;
+
+  const note = await Note.findByPk(id, { include: Collaboration });
+  if (!note) {
+    res.statusCode = 404;
+    throw new Error("Note not found");
+  }
+  if (note.createdBy !== res.locals.user.id) {
+    res.statusCode = 403;
+    throw new Error("Forbidden");
+  }
+
   await NoteHistory.create({
     noteId: id,
     changedBy: res.locals.user.id,
@@ -196,6 +221,7 @@ router.post("/invite", async (req, res) => {
     userId: user.id,
     noteId: noteId,
   });
+  io.to(`note_${noteId}`).emit("note_invite", user.id);
   res.send(collaboration);
 });
 

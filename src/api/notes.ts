@@ -29,10 +29,11 @@ router.post("/", async (req, res) => {
     res.status(400).json({ errors: result.error.format() });
     return;
   }
-  const { title, description }: createNoteType = result.data;
+  const { title, description, category }: createNoteType = result.data;
   const note = await Note.create({
     title,
     description: description || null,
+    category,
     createdBy: res.locals.user.id,
   });
 
@@ -72,7 +73,6 @@ router.get("/", async (req, res) => {
         include: { model: User, attributes: ["id", "name", "avatar"] },
       },
     ],
-    logging: console.log,
   });
   res.json(notes);
 });
@@ -83,7 +83,7 @@ router.get("/:id", async (req, res) => {
     res.statusCode = 403;
     throw new Error("Missing Tokens");
   }
-  
+
   const result = noteByIdSchema.safeParse(req.params);
   if (!result.success) {
     res.status(400).json({ errors: result.error.format() });
@@ -95,7 +95,10 @@ router.get("/:id", async (req, res) => {
     res.statusCode = 404;
     throw new Error("Note not found");
   }
-  if (note.createdBy !== res.locals.user.id && !note.Collaborations?.some((c) => c.userId === res.locals.user.id)) {
+  if (
+    note.createdBy !== res.locals.user.id &&
+    !note.Collaborations?.some((c) => c.userId === res.locals.user.id)
+  ) {
     res.statusCode = 403;
     throw new Error("Forbidden");
   }
@@ -121,7 +124,7 @@ router.put("/:id", async (req, res) => {
   }
 
   const { id }: noteByIdType = resultId.data;
-  const { title, description }: updateNoteType = result.data;
+  const { title, description, category }: updateNoteType = result.data;
 
   const note = await Note.findByPk(id, { include: Collaboration });
   if (!note) {
@@ -129,7 +132,10 @@ router.put("/:id", async (req, res) => {
     throw new Error("Note not found");
   }
 
-  if (note.createdBy !== res.locals.user.id && !note.Collaborations?.some((c) => c.userId === res.locals.user.id)) {
+  if (
+    note.createdBy !== res.locals.user.id &&
+    !note.Collaborations?.some((c) => c.userId === res.locals.user.id)
+  ) {
     res.statusCode = 403;
     throw new Error("Forbidden");
   }
@@ -144,7 +150,7 @@ router.put("/:id", async (req, res) => {
     newDescription: description || null,
   });
 
-  const updatedNote = await note.update({ title, description });
+  const updatedNote = await note.update({ title, description, category });
   io.to(`note_${note.id}`).emit("note_update", updatedNote);
   res.json(note);
 });

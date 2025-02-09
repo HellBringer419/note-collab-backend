@@ -256,20 +256,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                    description: ID of the created collaboration.
-                    example: 42
-                  userId:
-                    type: integer
-                    description: ID of the user being invited to collaborate.
-                    example: 123
-                  noteId:
-                    type: integer
-                    description: ID of the note that the collaboration is for.
-                    example: 1
+                type: array
+                items:
+                  $ref: "#/components/schemas/Collaboration"
 
 components:
   securitySchemes:
@@ -353,6 +342,10 @@ components:
           type: string
           minLength: 3
           example: "Meeting Notes"
+        category:
+          type: string
+          nullable: true
+          example: "Notes from today's meeting"
         description:
           type: string
           nullable: true
@@ -367,6 +360,10 @@ components:
           type: string
           minLength: 3
           example: "Updated Meeting Notes"
+        category:
+          type: string
+          nullable: true
+          example: "Updated notes from today's meeting"
         description:
           type: string
           nullable: true
@@ -405,6 +402,9 @@ components:
         title:
           type: string
           example: "Meeting Notes"
+        category:
+          type: string
+          example: "Notes from today's meeting"
         description:
           type: string
           example: "Notes from today's meeting"

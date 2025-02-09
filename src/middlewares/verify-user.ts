@@ -19,8 +19,7 @@ export const verifyUserRest = (
     throw new Error("Authentication required");
   }
 
-  console.log(token, "from REST");
-  
+  // console.log(token, "from REST");
 
   try {
     // Verify the token using JWT secret key

@@ -15,39 +15,42 @@ export const io = new Server(httpServer, {
     skipMiddlewares: true,
   },
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: "*",
   },
 });
 
 io.on("connection", async (socket) => {
   console.log("Listening to socket connections");
 
-  socket.on("subscribe-note", async (payload: number, callback: (t: SocketErrorResponse) => void) => {
-    if (!payload || typeof payload !== "number") {
+  socket.on(
+    "subscribe-note",
+    async (payload: number, callback: (t: SocketErrorResponse) => void) => {
+      if (!payload || typeof payload !== "number") {
+        return callback({
+          status: "Bad Request",
+          error: new Error("Unaccepted payload"),
+        });
+      }
+
+      if (typeof callback !== "function") {
+        // not an acknowledgement
+        return socket.disconnect();
+      }
+
+      const note = await Note.findByPk(payload);
+      if (!note) {
+        return callback({
+          status: "Bad Request",
+          error: new Error("Note not found"),
+        });
+      }
+
+      socket.join(`note_${note.id}`);
       return callback({
-        status: "Bad Request",
-        error: new Error("Unaccepted payload")
+        status: "Success",
       });
-    }
-
-    if (typeof callback !== "function") {
-      // not an acknowledgement
-      return socket.disconnect();
-    }
-
-    const note = await Note.findByPk(payload);
-    if (!note) {
-      return callback({
-        status: "Bad Request",
-        error: new Error("Note not found")
-      });
-    }
-
-    socket.join(`note_${note.id}`);
-    return callback({
-      status: "Success",
-    })
-  });
+    },
+  );
 
   socket.on("disconnect", () => {
     console.log("user disconnected");
@@ -63,7 +66,7 @@ io.on("connection", async (socket) => {
 
 //   console.log(token, "from WS");
 //   console.log({ JWT_SECRET });
-  
+
 //   // Verify the token (you can use your existing authentication logic)
 //   try {
 //     // Verify the token using JWT secret key
@@ -86,7 +89,7 @@ io.on("connection", async (socket) => {
 
 //   console.log(token, "from WS");
 //   console.log({ JWT_SECRET });
-  
+
 //   // Verify the token (you can use your existing authentication logic)
 //   try {
 //     // Verify the token using JWT secret key

@@ -52,6 +52,14 @@ io.on("connection", async (socket) => {
     },
   );
 
+  socket.on("unsubscribe-note", async (payload: number) => {
+    if (!payload || typeof payload !== "number") {
+      console.error("Tried to unsubscribe-note without correct payload");
+      return;
+    }
+    socket.leave(`note_${payload}`);
+  });
+
   socket.on("disconnect", () => {
     console.log("user disconnected");
   });
@@ -112,6 +120,8 @@ httpServer.listen(port, async () => {
   try {
     await sequelize.authenticate();
     console.log("Connection has been established successfully.");
+    // await sequelize.sync({ force: true });
+    // console.log("sycned");
   } catch (error) {
     console.error("Unable to connect to the database:", error);
   }

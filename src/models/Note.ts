@@ -33,7 +33,7 @@ export class Note extends Model<
   @Attribute(DataTypes.TEXT)
   declare description: string | null;
 
-  @Attribute(DataTypes.TIME)
+  @Attribute(DataTypes.STRING)
   declare category: string | null;
 
   @Attribute(DataTypes.INTEGER)
